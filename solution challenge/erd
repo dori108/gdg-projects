@@ -1,0 +1,136 @@
+CREATE DATABASE IF NOT EXISTS solchal;
+USE solchal;
+
+CREATE TABLE Users (
+    user_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    birthdate DATE,
+    gender ENUM('M', 'F', 'Other')
+);
+
+CREATE TABLE Foods (
+    food_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    protein FLOAT,
+    sugar FLOAT,
+    sodium FLOAT,
+    serving_size VARCHAR(50)
+);
+
+CREATE TABLE Rare_Disease_Categories (
+    category_id INT AUTO_INCREMENT PRIMARY KEY,
+    main_category VARCHAR(100),
+    sub_category VARCHAR(100)
+);
+
+CREATE TABLE Diseases (
+    disease_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100),
+    description TEXT,
+    max_protein_per_day FLOAT,
+    max_sugar_per_day FLOAT,
+    max_sodium_per_day FLOAT,
+    notes TEXT,
+    category_id INT,
+    FOREIGN KEY (category_id) REFERENCES Rare_Disease_Categories(category_id)
+);
+
+CREATE TABLE User_Disease_Info (
+    user_disease_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    disease_id INT,
+    personalized_protein_limit FLOAT,
+    personalized_sugar_limit FLOAT,
+    personalized_sodium_limit FLOAT,
+    notes TEXT,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id),
+    FOREIGN KEY (disease_id) REFERENCES Diseases(disease_id)
+);
+
+CREATE TABLE Food_Records (
+    record_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    food_id INT,
+    consumed_at DATETIME,
+    amount FLOAT, -- 섭취한 g/ml 등
+    FOREIGN KEY (user_id) REFERENCES Users(user_id),
+    FOREIGN KEY (food_id) REFERENCES Foods(food_id)
+);
+
+CREATE TABLE Nutrient_Tracker (
+    track_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    date DATE,
+    total_protein FLOAT,
+    total_sugar FLOAT,
+    total_sodium FLOAT,
+    remaining_protein FLOAT,
+    remaining_sugar FLOAT,
+    remaining_sodium FLOAT,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id)
+);
+
+CREATE TABLE Disease_Warnings (
+    warning_id INT AUTO_INCREMENT PRIMARY KEY,
+    disease_id INT,
+    warning_type VARCHAR(100), -- ex: "고당", "염분 제한"
+    warning_detail TEXT,
+    source_url TEXT,
+    FOREIGN KEY (disease_id) REFERENCES Diseases(disease_id)
+);
+
+CREATE TABLE Disease_Nutrient_Restrictions (
+    restriction_id INT AUTO_INCREMENT PRIMARY KEY,
+    disease_id INT,
+    nutrient_type VARCHAR(50), -- ex: "sugar", "sodium", "protein"
+    max_amount_per_day FLOAT,
+    unit VARCHAR(20), -- ex: "g", "mg"
+    FOREIGN KEY (disease_id) REFERENCES Diseases(disease_id)
+);
+
+
+CREATE TABLE AI_Search_Logs (
+    search_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    search_term VARCHAR(255),
+    result_summary TEXT,
+    searched_at DATETIME,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id)
+);
+
+CREATE TABLE User_Diet_Log (
+    log_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    log_date DATE,
+    meal_type ENUM('breakfast', 'lunch', 'dinner', 'snack'),
+    foods TEXT, -- 사용자가 먹은 음식 (자유입력)
+    notes TEXT, -- 사용자가 작성한 메모 (ex: "오늘은 회식을 했다", "피곤함")
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id)
+);
+
+CREATE TABLE Health_Reports (
+    report_id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT,
+    report_type ENUM('weekly', 'monthly'),
+    start_date DATE,
+    end_date DATE,
+    summary TEXT, -- AI가 요약한 보고서
+    total_calories FLOAT,
+    avg_sugar FLOAT,
+    avg_sodium FLOAT,
+    avg_protein FLOAT,
+    risk_score FLOAT, -- AI가 계산한 리스크 점수 (0~100)
+    improvement_suggestions TEXT, -- AI 제안
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES Users(user_id)
+);
+
+CREATE TABLE Diet_Log_Foods (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    log_id INT,
+    food_id INT,
+    amount FLOAT,
+    FOREIGN KEY (log_id) REFERENCES User_Diet_Log(log_id),
+    FOREIGN KEY (food_id) REFERENCES Foods(food_id)
+);
